@@ -1,0 +1,121 @@
+$password = "{password}" 
+$securepassword = $password | Convertto-SecureString -AsPlainText -Force
+$creds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList "{cred username}", $securepassword
+
+$Date = Get-Date
+$ErrorState = 0
+$ErrorMessage = ""
+$Trace = ""
+$Error.Clear()
+
+$session = New-PSSession -ComputerName localhost  -authentication credssp -credential $creds
+
+if ($Session -eq $null)
+{
+    $ErrorMessage = $Error[0]
+    $Trace += "Could not create PSSession to {COMPUTER NAME}"
+    $ErrorState = 2
+}
+else 
+{
+    
+
+    $ReturnArray = Invoke-command -session $session -ScriptBlock {
+    $password = "{365 password}" 
+    $securepassword = $password | Convertto-SecureString -AsPlainText -Force
+    $credentials = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList "{365 Username}", $securepassword
+    
+    try
+    {
+        $Action = "Assign Office 365 Licences"
+    
+        try
+        {
+            Import-Module MSOnline
+            $Trace += "Microsoft Online Module Imported. . .`r`n"
+        }
+        catch
+        {
+            $Trace += "Exception caught in remote action '$Action'. . . `r`n"
+            $ErrorState = 2
+            $ErrorMessage = $Error[0].Exception.ToString()
+        }        
+    
+        Connect-MSOLService -Credential $credentials
+   
+        $User = Get-MSOLUser -UserPrincipalName "{userprincipalname}"
+
+        $Customlicence = New-MSOLLicenseOptions -AccountSkuId "{licenceSKU}" -DisabledPlans "{disabledplan}"
+        
+        $CRM =  "{need CRM}"
+        $Project = "{need Project}"
+
+        if ($user)
+        {
+            #Set usagelocaiton to GB so licences can be assigned
+            Set-MSOLUser -UserPrincipalName  "{userprincipalname}" -UsageLocation GB
+            $Trace += "User: {userprincipalname}. `r`n"
+            $Trace += "Setting User Location to GB.`r`n"
+            #Set-MSOLUserLicense -UserPrincipalName  "{userprincipalname}" -AddLicenses $licence
+            $user | Set-MSOLUserLicense -AddLicenses {licenceSKU}
+            $Trace += "Adding {licence name} Licence to user.`r`n"
+            
+            if ($Project -eq "Yes" -and $CRM -eq "Yes")
+            {
+                #Add custom licence with disabled plan
+                $user | Set-MSOLUserLicense -AddLicenses {licenceSKU} -LicenseOptions $CustomLicence
+                #Add standard licences
+                $user | Set-MSOLUserLicense -AddLicenses {licenceSKU}
+                $user | Set-MSOLUserLicense -AddLicenses {licenceSKU}
+                $Trace += "Adding {licence name} Licence to user.`r`n"  
+                $Trace += "Adding {licence name} Licence to user.`r`n"  
+                 
+            } elseif ($Project -eq "Yes" -and $CRM -eq "No")
+            {
+                #Add custom licence with disabled plan
+                $user | Set-MSOLUserLicense -AddLicenses {licenceSKU} -LicenseOptions $CustomLicence
+                #Add standard licences
+                $user | Set-MSOLUserLicense -AddLicenses {licenceSKU}
+                $Trace += "Adding {licence name} Licence to user.`r`n"
+            } elseif ($CRM -eq "Yes" -and $Project -eq "No")
+            {
+                $user | Set-MSOLUserLicense -AddLicenses {licenceSKU} 
+                $Trace += "Adding {licence name} Licence to user.`r`n"
+            }
+            $Status = "Licenses Assigned"
+            $Statusno = 0
+        }
+        else
+        {
+            $Trace += "User : {userprincipalname} not found"
+            $Status = "No User"
+            $Statusno = 1
+        }
+        $ErrorState = 0
+        $Trace += "Completed remote action '$Action'. . .`r`n"
+    }
+    catch
+    {
+        $Trace += "Exception caught in remote action '$Action'. . .`r`n"
+        $ErrorState = 2
+    }
+    Finally
+    {
+        $Trace += "Exiting remote action '$Action'. `r`n"
+        $Trace += "ErrorState:      $ErrorState.`r`n"
+        $Trace += "ErrorMessage:    $ErrorMessage.`r`n"
+    }
+    
+    $results = @($ErrorState,$ErrorMessage,$Trace,$Status,$StatusNo)
+    Return $results
+    }
+    $ErrorState = $ReturnArray[0]
+    $ErrorMessage = $ReturnArray[1]
+    $Trace = $ReturnArray[2]
+    $TaskStatus = $ReturnArray[3]
+    $TaskStatusno = $ReturnArray[4]
+
+    Remove-PSSession -Session $session
+}
+
+Add-Content {log path} "$Date`r`nAssign Office 365 Licence Command`r`nLog: $Trace"
