@@ -1,7 +1,7 @@
 $password = "{password}" 
 $securepassword = $password | Convertto-SecureString -AsPlainText -Force
 
-$credentials = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList {cred username}, $securepassword
+$credentials = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList "{cred username}", $securepassword
 
 $Date = Get-Date
 $ErrorState = 0
