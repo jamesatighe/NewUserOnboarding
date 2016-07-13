@@ -28,7 +28,7 @@ else
             Try 
             {
          
-            $User = $(try { Get-ADUser -identity "\`d.T.~Ed/{76D88380-F3B3-4242-85A2-555C988F5F76}.{9FBB77CA-14A9-4035-9E2E-4EEC105A24C4}\`d.T.~Ed/"} catch {$null}
+            $User = $(try { Get-ADUser -identity "\`d.T.~Ed/{76D88380-F3B3-4242-85A2-555C988F5F76}.{9FBB77CA-14A9-4035-9E2E-4EEC105A24C4}\`d.T.~Ed/"} catch {$null})
             if ($user)
             {
                 $Trace += "User: \`d.T.~Ed/{76D88380-F3B3-4242-85A2-555C988F5F76}.{9FBB77CA-14A9-4035-9E2E-4EEC105A24C4}\`d.T.~Ed/ exists. `r`n"
