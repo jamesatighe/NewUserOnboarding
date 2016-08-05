@@ -1,6 +1,6 @@
-$password = "{Password}" 
-$securepassword = $password | Convertto-SecureString -AsPlainText -Force
-$creds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList "{cred username}", $securepassword
+$password = "{password}" 
+    $securepassword = $password | Convertto-SecureString -AsPlainText -Force
+    $creds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList "{user}", $securepassword
 
 $Date = Get-Date
 $ErrorState = 0
@@ -8,12 +8,12 @@ $ErrorMessage = ""
 $Trace = ""
 $Error.Clear()
 
-$session = New-PSSession -ComputerName "{COMPUTER NAME}"  -authentication credssp -credential $creds
+$session = New-PSSession -ComputerName "{remote-server}"  -authentication credssp -credential $creds
 
 if ($Session -eq $null)
 {
     $ErrorMessage = $Error[0]
-    $Trace += "Could not create PSSession to {COMPUTER NAME}"
+    $Trace += "Could not create PSSession to CAMSDC11.cobwebsolutions.com"
     $ErrorState = 2
 }
 else
@@ -25,17 +25,18 @@ else
             
             Import-Module ActiveDirectory    
             $Trace += "Importing the ActiveDirectory Module. . . `r`n"
-            
-            $User = $(Try { Get-ADUser -identity "{firstname.lastname}" } catch { $null }
+            $Trace += "Checking user: {first name}.{last name}`r`n"          
+
+            $User = $(Try { Get-ADUser -identity "{first name}.{last name}" } catch { $null })
             if ($user)
             {
-                $Trace += "User: {firstname.lastname} already exists. `r`n"
+                $Trace += "User: {first name}.{last name} already exists. `r`n"
                 $status = "Exists"
                 $statusno = 0
             }
             else
             {
-                $Trace += "User: {firstname.lastname} does not exist. Move to user creation. `r`n"
+                $Trace += "User: {first name}.{last name} does not exist. Move to user creation. `r`n"
                 $status = "Does not Exist"
                 $statusno = 1
             }
@@ -70,8 +71,18 @@ $TaskStatusNo = $ReturnArray[4]
 Remove-PSSession -Session $session
 }
 
+#Create new log file
+
 $logdate = Get-Date -format ddMMyy
 $logpath = "C:\OrchestratorLogs\$logdate"
+if (!(Test-Path ("$logpath\$logdate-aduser.log")))
+{
+New-Item "$logpath\$logdate-aduser.log" -Type file -Force
+}
+else
+{
+$log = "$logpath\$logdate-aduser.log"
+Add-Content $log "$date`r`nAD Account required.`r`nLog: $Trace"
+}
 
-$log = New-Item "$logpath\$logdate-admlog.log" -Type file -Force
-Add-Content $log "$date`r`nCheck User Command`r`nLog: $Trace"
+
